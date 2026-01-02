@@ -98,67 +98,69 @@ export default function Navbar() {
                                 placeholder="Search dramas..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-64 pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-full text-white placeholder-gray-400 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
+                                className="w-48 lg:w-64 pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-full text-white placeholder-gray-400 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all"
                             />
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         </form>
 
                         {/* User Menu (Desktop) */}
-                        {user ? (
-                            <div className="relative" ref={userMenuRef}>
-                                <button
-                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                                    className="flex items-center gap-2 focus:outline-none"
-                                >
-                                    <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center overflow-hidden border border-rose-400">
-                                        {user.avatar ? (
-                                            <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <User className="w-5 h-5 text-white" />
-                                        )}
-                                    </div>
-                                </button>
-
-                                {isUserMenuOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl py-1 animate-fade-in">
-                                        <div className="px-4 py-3 border-b border-zinc-800">
-                                            <p className="text-sm text-white font-medium truncate">{user.name}</p>
-                                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        <div className="flex-shrink-0 ml-4">
+                            {user ? (
+                                <div className="relative" ref={userMenuRef}>
+                                    <button
+                                        onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                        className="flex items-center gap-2 focus:outline-none hover:scale-105 transition-transform"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center overflow-hidden border-2 border-rose-500 ring-2 ring-black/50">
+                                            {user.avatar ? (
+                                                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <User className="w-5 h-5 text-white" />
+                                            )}
                                         </div>
-                                        <Link
-                                            href="/mylist"
-                                            className="block px-4 py-2 text-sm text-gray-300 hover:bg-zinc-800 hover:text-white"
-                                            onClick={() => setIsUserMenuOpen(false)}
-                                        >
-                                            My List
-                                        </Link>
-                                        <button
-                                            onClick={() => {
-                                                logout();
-                                                setIsUserMenuOpen(false);
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-zinc-800 hover:text-red-300 flex items-center gap-2"
-                                        >
-                                            <LogOut className="w-4 h-4" />
-                                            Sign Out
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <Link
-                                href="/login"
-                                className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-medium rounded-full transition-colors"
-                            >
-                                Login
-                            </Link>
-                        )}
+                                    </button>
+
+                                    {isUserMenuOpen && (
+                                        <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl py-1 animate-fade-in z-50">
+                                            <div className="px-4 py-3 border-b border-zinc-800">
+                                                <p className="text-sm text-white font-medium truncate">{user.name}</p>
+                                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                            </div>
+                                            <Link
+                                                href="/mylist"
+                                                className="block px-4 py-2 text-sm text-gray-300 hover:bg-zinc-800 hover:text-white"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                            >
+                                                My List
+                                            </Link>
+                                            <button
+                                                onClick={() => {
+                                                    logout();
+                                                    setIsUserMenuOpen(false);
+                                                }}
+                                                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-zinc-800 hover:text-red-300 flex items-center gap-2"
+                                            >
+                                                <LogOut className="w-4 h-4" />
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    className="px-6 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-full transition-all shadow-lg shadow-rose-600/20 hover:shadow-rose-600/40"
+                                >
+                                    Login
+                                </Link>
+                            )}
+                        </div>
                     </div>
 
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="md:hidden text-white p-2"
+                        className="md:hidden text-gray-300 hover:text-white p-2"
                     >
                         {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>
