@@ -4,70 +4,7 @@ import MovieCard from "@/components/MovieCard";
 import ContinueWatching from "@/components/ContinueWatching";
 import { ChevronRight, Flame, Clock } from "lucide-react";
 import Link from "next/link";
-
-// Mock data for development/fallback
-const mockDramas = [
-  {
-    id: "1",
-    title: "Vincenzo",
-    thumbnail: "/posters/vincenzo.png",
-    rating: "9.2",
-    year: "2021",
-    genres: ["Crime", "Comedy", "Romance"],
-    status: "completed" as const,
-    description: "An Italian lawyer returns to Korea to recover hidden gold, but becomes entangled with a tenacious female lawyer fighting against a powerful conglomerate.",
-  },
-  {
-    id: "2",
-    title: "Crash Landing on You",
-    thumbnail: "/posters/crash-landing.png",
-    rating: "9.4",
-    year: "2020",
-    genres: ["Romance", "Comedy", "Drama"],
-    status: "completed" as const,
-    description: "A South Korean heiress crash-lands in North Korea and falls in love with an army captain who helps hide her.",
-  },
-  {
-    id: "3",
-    title: "Squid Game",
-    thumbnail: "/posters/squid-game.png",
-    rating: "8.8",
-    year: "2021",
-    genres: ["Thriller", "Drama", "Action"],
-    status: "completed" as const,
-    description: "Hundreds of cash-strapped contestants accept a strange invitation to compete in children's games for a tempting prize.",
-  },
-  {
-    id: "4",
-    title: "All of Us Are Dead",
-    thumbnail: "/posters/all-of-us-are-dead.png",
-    rating: "8.5",
-    year: "2022",
-    genres: ["Horror", "Action", "Thriller"],
-    status: "completed" as const,
-    description: "A high school becomes ground zero for a zombie virus outbreak. Trapped students must fight their way out or face becoming undead.",
-  },
-  {
-    id: "5",
-    title: "Business Proposal",
-    thumbnail: "/posters/business-proposal.png",
-    rating: "8.7",
-    year: "2022",
-    genres: ["Romance", "Comedy"],
-    status: "completed" as const,
-    description: "An employee goes on a blind date in place of her friend, but the date turns out to be her company's CEO.",
-  },
-  {
-    id: "6",
-    title: "Hometown Cha-Cha-Cha",
-    thumbnail: "/posters/hometown-cha-cha-cha.png",
-    rating: "8.9",
-    year: "2021",
-    genres: ["Romance", "Comedy", "Drama"],
-    status: "completed" as const,
-    description: "A dentist moves to a seaside village and forms a relationship with a handyman who is loved by all.",
-  },
-];
+import { mockDramas } from "@/lib/mockData";
 
 export default async function Home() {
   // Fetch data from API
