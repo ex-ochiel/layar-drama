@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Film, Filter } from "lucide-react";
+import { Search, Film, Filter, X } from "lucide-react";
 import MovieCard from "@/components/MovieCard";
 import GenreFilter from "@/components/GenreFilter";
+import AdvancedFilter from "@/components/AdvancedFilter";
 import { Drama } from "@/lib/types";
 
 interface SearchPageClientProps {
@@ -15,20 +16,62 @@ export default function SearchPageClient({
     initialDramas,
     initialQuery,
 }: SearchPageClientProps) {
+    // Advanced Filter States
     const [selectedGenre, setSelectedGenre] = useState("all");
+    const [selectedCountry, setSelectedCountry] = useState("all");
+    const [selectedStatus, setSelectedStatus] = useState("all");
+    const [selectedYear, setSelectedYear] = useState("all");
+
     const [showFilters, setShowFilters] = useState(false);
 
-    // Filter dramas by selected genre
+    // Filter dramas based on ALL criteria
     const filteredDramas = useMemo(() => {
-        if (selectedGenre === "all") {
-            return initialDramas;
-        }
-        return initialDramas.filter((drama) =>
-            drama.genres?.some(
-                (genre) => genre.toLowerCase() === selectedGenre.toLowerCase()
-            )
-        );
-    }, [initialDramas, selectedGenre]);
+        return initialDramas.filter((drama) => {
+            // 1. Genre Filter
+            if (selectedGenre !== "all" && !drama.genres?.some(
+                (g) => g.toLowerCase() === selectedGenre.toLowerCase()
+            )) {
+                return false;
+            }
+
+            // 2. Country Filter
+            if (selectedCountry !== "all" && drama.country !== selectedCountry) {
+                return false;
+            }
+
+            // 3. Status Filter
+            if (selectedStatus !== "all" && drama.status !== selectedStatus) {
+                return false;
+            }
+
+            // 4. Year Filter
+            if (selectedYear !== "all") {
+                if (selectedYear === "older") {
+                    // If "older", exclude 2020-2023 (or whatever remains in filter)
+                    if (["2023", "2022", "2021", "2020"].includes(drama.year || "")) return false;
+                } else if (drama.year !== selectedYear) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }, [initialDramas, selectedGenre, selectedCountry, selectedStatus, selectedYear]);
+
+    // Count active filters
+    const activeFiltersCount = [
+        selectedGenre,
+        selectedCountry,
+        selectedStatus,
+        selectedYear,
+    ].filter((v) => v !== "all").length;
+
+    const resetFilters = () => {
+        setSelectedGenre("all");
+        setSelectedCountry("all");
+        setSelectedStatus("all");
+        setSelectedYear("all");
+    };
 
     return (
         <div className="min-h-screen pt-24 pb-12">
@@ -67,38 +110,73 @@ export default function SearchPageClient({
                 </form>
 
                 {/* Filter Toggle Button */}
-                <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="flex items-center gap-2 px-4 py-2 mb-4 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors"
-                >
-                    <Filter className="w-4 h-4" />
-                    <span>Filter by Genre</span>
-                    <span
-                        className={`transition-transform ${showFilters ? "rotate-180" : ""}`}
+                <div className="flex items-center gap-3 mb-6">
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-all",
+                            (showFilters || activeFiltersCount > 0) && "ring-2 ring-rose-500/50"
+                        )}
                     >
-                        ▼
-                    </span>
-                </button>
+                        <Filter className={cn("w-4 h-4", activeFiltersCount > 0 && "text-rose-400")} />
+                        <span>Filters</span>
+                        {activeFiltersCount > 0 && (
+                            <span className="bg-rose-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                {activeFiltersCount}
+                            </span>
+                        )}
+                        <span
+                            className={`transition-transform text-gray-400 ${showFilters ? "rotate-180" : ""}`}
+                        >
+                            ▼
+                        </span>
+                    </button>
 
-                {/* Genre Filter */}
+                    {activeFiltersCount > 0 && (
+                        <button
+                            onClick={resetFilters}
+                            className="text-sm text-gray-400 hover:text-white flex items-center gap-1"
+                        >
+                            <X className="w-3 h-3" />
+                            Clear all
+                        </button>
+                    )}
+                </div>
+
+                {/* Filters Panel */}
                 {showFilters && (
-                    <div className="mb-8 p-4 bg-zinc-900/50 rounded-xl border border-zinc-800 animate-fade-in">
-                        <h3 className="text-sm font-medium text-gray-400 mb-3">
-                            Select Genre
-                        </h3>
-                        <GenreFilter
-                            selectedGenre={selectedGenre}
-                            onGenreChange={setSelectedGenre}
-                        />
+                    <div className="mb-8 p-6 bg-zinc-900/80 backdrop-blur rounded-2xl border border-white/10 animate-fade-in shadow-xl">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {/* 1. Genre */}
+                            <div className="col-span-1 md:col-span-2 lg:col-span-4 border-b border-white/10 pb-6 mb-2">
+                                <h3 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
+                                    Main Genre
+                                </h3>
+                                <GenreFilter
+                                    selectedGenre={selectedGenre}
+                                    onGenreChange={setSelectedGenre}
+                                />
+                            </div>
+
+                            {/* 2. Advanced Filters */}
+                            <div className="col-span-1 md:col-span-2 lg:col-span-4">
+                                <AdvancedFilter
+                                    selectedCountry={selectedCountry}
+                                    onCountryChange={setSelectedCountry}
+                                    selectedStatus={selectedStatus}
+                                    onStatusChange={setSelectedStatus}
+                                    selectedYear={selectedYear}
+                                    onYearChange={setSelectedYear}
+                                />
+                            </div>
+                        </div>
                     </div>
                 )}
 
                 {/* Results Count */}
-                <div className="mb-4 text-gray-400 text-sm">
-                    Showing {filteredDramas.length} drama{filteredDramas.length !== 1 ? "s" : ""}
-                    {selectedGenre !== "all" && (
-                        <span className="text-rose-400"> in {selectedGenre}</span>
-                    )}
+                <div className="mb-4 text-gray-400 text-sm flex items-center gap-2">
+                    <span>Found {filteredDramas.length} drama{filteredDramas.length !== 1 ? "s" : ""}</span>
+                    {activeFiltersCount > 0 && <span className="text-rose-500 font-medium">(Filtered)</span>}
                 </div>
 
                 {/* Results Grid */}
@@ -115,19 +193,28 @@ export default function SearchPageClient({
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-20">
+                    <div className="text-center py-20 bg-zinc-900/30 rounded-2xl border border-white/5 mx-auto max-w-2xl">
                         <Film className="w-16 h-16 mx-auto text-gray-600 mb-4" />
                         <h3 className="text-xl font-semibold text-white mb-2">
-                            No dramas found
+                            No matching dramas found
                         </h3>
-                        <p className="text-gray-400">
-                            {selectedGenre !== "all"
-                                ? `No dramas found in "${selectedGenre}" genre. Try another genre.`
-                                : "Try searching with different keywords."}
+                        <p className="text-gray-400 mb-6">
+                            Adjust your filters to see more results.
                         </p>
+                        <button
+                            onClick={resetFilters}
+                            className="px-6 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg transition-colors"
+                        >
+                            Clear Filters
+                        </button>
                     </div>
                 )}
             </div>
         </div>
     );
+}
+
+// Helper for conditional classes
+function cn(...classes: (string | undefined | null | false)[]) {
+    return classes.filter(Boolean).join(" ");
 }

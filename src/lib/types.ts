@@ -10,6 +10,7 @@ export interface Drama {
     status?: "ongoing" | "completed";
     description?: string;
     endpoint?: string;
+    country?: string;
 }
 
 export interface Episode {
