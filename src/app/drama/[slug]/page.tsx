@@ -174,7 +174,26 @@ export default async function DramaDetailPage({ params }: DramaDetailPageProps) 
                                         <h3 className="text-sm font-semibold text-gray-400 mb-2">
                                             Cast
                                         </h3>
-                                        <p className="text-white">{drama.cast.join(", ")}</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {drama.cast.map((actorName, index) => {
+                                                // Simple slug generation for matching
+                                                const actorSlug = actorName.toLowerCase().replace(/\s+/g, "-");
+                                                // Check if we have this actor in our mock data
+                                                // We need to import mockActors dynamically or just use the slug convention
+                                                // For now, let's link all of them to /actor/slug and handle 404s gracefully or check availability
+                                                return (
+                                                    <span key={actorSlug} className="text-gray-300">
+                                                        <Link
+                                                            href={`/actor/${actorSlug}`}
+                                                            className="text-white hover:text-rose-500 hover:underline transition-colors"
+                                                        >
+                                                            {actorName}
+                                                        </Link>
+                                                        {index < drama.cast!.length - 1 && ", "}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 )}
                             </div>

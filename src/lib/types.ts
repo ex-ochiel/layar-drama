@@ -35,6 +35,17 @@ export interface StreamSource {
     server?: string;
 }
 
+export interface Actor {
+    id: string;
+    name: string;
+    slug: string;
+    photo: string; // URL to photo
+    birthDate?: string;
+    birthPlace?: string;
+    biography?: string;
+    knownFor: string[]; // Drama IDs
+}
+
 export interface ApiResponse<T> {
     status: boolean;
     data: T;
