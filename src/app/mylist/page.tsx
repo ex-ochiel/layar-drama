@@ -1,11 +1,26 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Heart, Film } from "lucide-react";
 import { useBookmarks } from "@/context/BookmarkContext";
+import { useAuth } from "@/context/AuthContext";
 import MovieCard from "@/components/MovieCard";
 
 export default function MyListPage() {
     const { bookmarks } = useBookmarks();
+    const { user, isLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading && !user) {
+            router.push("/login");
+        }
+    }, [user, isLoading, router]);
+
+    if (isLoading || !user) {
+        return null; // Or a loading spinner
+    }
 
     return (
         <div className="min-h-screen pt-24 pb-12">

@@ -1,16 +1,31 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Film, Menu, X, Heart } from "lucide-react";
+import { Search, Film, Menu, X, Heart, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const router = useRouter();
+    const { user, logout } = useAuth();
+    const userMenuRef = useRef<HTMLDivElement>(null);
+
+    // Close user menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+                setIsUserMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -87,6 +102,57 @@ export default function Navbar() {
                             />
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         </form>
+
+                        {/* User Menu (Desktop) */}
+                        {user ? (
+                            <div className="relative" ref={userMenuRef}>
+                                <button
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    className="flex items-center gap-2 focus:outline-none"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center overflow-hidden border border-rose-400">
+                                        {user.avatar ? (
+                                            <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User className="w-5 h-5 text-white" />
+                                        )}
+                                    </div>
+                                </button>
+
+                                {isUserMenuOpen && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl py-1 animate-fade-in">
+                                        <div className="px-4 py-3 border-b border-zinc-800">
+                                            <p className="text-sm text-white font-medium truncate">{user.name}</p>
+                                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                        </div>
+                                        <Link
+                                            href="/mylist"
+                                            className="block px-4 py-2 text-sm text-gray-300 hover:bg-zinc-800 hover:text-white"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                        >
+                                            My List
+                                        </Link>
+                                        <button
+                                            onClick={() => {
+                                                logout();
+                                                setIsUserMenuOpen(false);
+                                            }}
+                                            className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-zinc-800 hover:text-red-300 flex items-center gap-2"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            Sign Out
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <Link
+                                href="/login"
+                                className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-medium rounded-full transition-colors"
+                            >
+                                Login
+                            </Link>
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -136,6 +202,44 @@ export default function Navbar() {
                                 <Heart className="w-4 h-4" />
                                 My List
                             </Link>
+
+                            {user ? (
+                                <>
+                                    <div className="py-2 border-t border-white/10 mt-2">
+                                        <div className="flex items-center gap-3 mb-3 px-2">
+                                            <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center overflow-hidden">
+                                                {user.avatar ? (
+                                                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User className="w-5 h-5 text-white" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-white font-medium">{user.name}</p>
+                                                <p className="text-xs text-gray-500">{user.email}</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                logout();
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            className="w-full text-left flex items-center gap-2 text-red-400 hover:text-red-300 py-2 px-2"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            Sign Out
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="block mt-2 text-center px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-lg transition-colors"
+                                >
+                                    Login
+                                </Link>
+                            )}
                         </div>
                     </div>
                 )}

@@ -46,6 +46,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { AuthProvider } from "@/context/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -63,9 +65,11 @@ export default function RootLayout({
         <BookmarkProvider>
           <WatchHistoryProvider>
             <RatingProvider>
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
+              <AuthProvider>
+                <Navbar />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </AuthProvider>
             </RatingProvider>
           </WatchHistoryProvider>
         </BookmarkProvider>
