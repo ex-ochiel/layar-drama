@@ -5,6 +5,7 @@ import { getDramaDetail } from "@/lib/api";
 import { Star, Calendar, Clock, ChevronRight, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DetailActions from "@/components/DetailActions";
+import DetailRating from "@/components/DetailRating";
 
 // Mock data for development
 const mockDramaDetail = {
@@ -150,6 +151,11 @@ export default async function DramaDetailPage({ params }: DramaDetailPageProps) 
                         <div className="mb-8">
                             <h2 className="text-xl font-semibold text-white mb-3">Synopsis</h2>
                             <p className="text-gray-300 leading-relaxed">{drama.synopsis}</p>
+                        </div>
+
+                        {/* User Rating */}
+                        <div className="mb-8">
+                            <DetailRating dramaId={slug} />
                         </div>
 
                         {/* Cast & Crew */}

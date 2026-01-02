@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { BookmarkProvider } from "@/context/BookmarkContext";
 import { WatchHistoryProvider } from "@/context/WatchHistoryContext";
+import { RatingProvider } from "@/context/RatingContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,9 +62,11 @@ export default function RootLayout({
       >
         <BookmarkProvider>
           <WatchHistoryProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
+            <RatingProvider>
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </RatingProvider>
           </WatchHistoryProvider>
         </BookmarkProvider>
       </body>
