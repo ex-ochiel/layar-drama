@@ -1,11 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "https://site-url-missing.com";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || "missing-key";
+// EMERGENCY FIX: Hardcoded credentials because Vercel Env Vars are not being read.
+const supabaseUrl = "https://bozlkhqnjaizqtkmmdsh.supabase.co";
+const supabaseAnonKey = "sb_publishable_EtEOgiPYhPV7GS9S9_fBiA_QZt_T8x-";
 
-if (supabaseUrl === "https://site-url-missing.com") {
-    console.error("❌ SUPABASE ENV VARS MISSING IN BUILD! Using placeholder to prevent crash.");
-    // We let it proceed so the build finishes, but API calls will fail (and fallback to mock).
+// Cleaned up debug logs
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("❌ SUPABASE CREDENTIALS MISSING!");
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
