@@ -1,32 +1,45 @@
-import { Drama, Actor, DramaDetail } from './types';
-import { mockDramas } from './mockData'; // Fallback / Types reference
+import { Drama, Actor, DramaDetail, StreamSource } from './types';
+import { mockDramas } from './mockData';
+import { supabase } from './supabaseClient';
 
 // Use absolute URL during build, relative during runtime
 const getBaseUrl = () => {
     if (typeof window !== 'undefined') {
-        // Client-side
         return '/api';
     }
-    // Server-side / Build time
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        // During build, return empty and use mock data
-        return '';
-    }
-    return '/api';
+    // Server-side: we should not use this for internal API calls during build.
+    // We will use direct DB calls instead.
+    return '';
 };
 
 const API_BASE_URL = getBaseUrl();
 
 export async function getDramas(filters?: { search?: string; status?: string; country?: string; year?: string }): Promise<Drama[]> {
-    // During build time, return mock data
-    if (!API_BASE_URL) {
-        let result = mockDramas;
-        if (filters?.search) {
-            result = result.filter(d => d.title.toLowerCase().includes(filters.search!.toLowerCase()));
+    // Server-side / Build time: Use direct DB call
+    if (typeof window === 'undefined') {
+        let query = supabase.from('dramas').select('*');
+
+        if (filters?.search) query = query.ilike('title', `%${filters.search}%`);
+        if (filters?.status && filters.status !== 'All') query = query.eq('status', filters.status);
+        if (filters?.country && filters.country !== 'All') query = query.eq('country', filters.country);
+        if (filters?.year && filters.year !== 'All') query = query.eq('year', parseInt(filters.year));
+
+        try {
+            const { data, error } = await query;
+            if (error) throw error;
+            return data as Drama[];
+        } catch (error) {
+            console.error("DB Error (getDramas):", error);
+            // Fallback to mock data if DB fails
+            let result = mockDramas;
+            if (filters?.search) {
+                result = result.filter(d => d.title.toLowerCase().includes(filters.search!.toLowerCase()));
+            }
+            return result;
         }
-        return result;
     }
 
+    // Client-side: Fetch via API route
     const params = new URLSearchParams();
     if (filters?.search) params.append('search', filters.search);
     if (filters?.status && filters.status !== 'All') params.append('status', filters.status);
@@ -39,7 +52,7 @@ export async function getDramas(filters?: { search?: string; status?: string; co
         return await res.json();
     } catch (error) {
         console.error("API Error (getDramas):", error);
-        return mockDramas; // Fallback to mock data
+        return [];
     }
 }
 
@@ -50,8 +63,6 @@ export async function searchDrama(query: string): Promise<Drama[]> {
 
 export async function getTrendingDramas(): Promise<Drama[]> {
     try {
-        // For now, trending is just top rated or random. Let's just fetch all and slice or sort.
-        // Ideally backend endpoint /api/dramas/trending
         const allDramas = await getDramas();
         return allDramas.sort((a, b) => parseFloat(b.rating || "0") - parseFloat(a.rating || "0")).slice(0, 5);
     } catch (e) {
@@ -65,7 +76,6 @@ export const getTrending = getTrendingDramas;
 export async function getLatestDramas(): Promise<Drama[]> {
     try {
         const allDramas = await getDramas();
-        // Return dramas sorted by year (newest first)
         return allDramas.sort((a, b) => parseInt(b.year || "0") - parseInt(a.year || "0")).slice(0, 12);
     } catch (e) {
         return [];
@@ -77,21 +87,71 @@ export const getLatest = getLatestDramas;
 
 export async function getDramaById(id: string): Promise<Drama | undefined> {
     // id here is actually the slug/endpoint
-    try {
-        const res = await fetch(`${API_BASE_URL}/dramas/${id}`);
-        if (!res.ok) {
-            if (res.status === 404) return undefined;
-            throw new Error('Failed to fetch drama details');
-        }
-        return await res.json();
-    } catch (error) {
-        console.error(`API Error (getDramaById ${id}):`, error);
-        return undefined;
-    }
+    return (await getDramaDetail(id)) || undefined;
 }
 
 // Alias for getDramaById - returns full drama detail including cast
 export async function getDramaDetail(slug: string): Promise<DramaDetail | null> {
+    // Server-side / Build time: Use direct DB call
+    if (typeof window === 'undefined') {
+        try {
+            // First fetch drama detail
+            const { data: drama, error: dramaError } = await supabase
+                .from('dramas')
+                .select('*')
+                .eq('endpoint', slug)
+                .single();
+
+            if (dramaError && dramaError.code !== 'PGRST116') throw dramaError;
+            if (!drama) return null;
+
+            // Then fetch associated actors via drama_actors join table
+            const { data: actorsData, error: actorsError } = await supabase
+                .from('drama_actors')
+                .select(`
+                    actors (
+                        id,
+                        name,
+                        slug,
+                        photo
+                    )
+                `)
+                .eq('drama_id', drama.id);
+
+            if (actorsError) throw actorsError;
+
+            // Transform actors data
+            const actors = actorsData.map((item: any) => ({
+                id: item.actors.id,
+                name: item.actors.name,
+                slug: item.actors.slug,
+                photo: item.actors.photo,
+                character: "Main Role", // Placeholder
+                role: "Main Cast" // Placeholder
+            }));
+
+            // Generate mock episodes for now (since we don't have episodes table yet)
+            // or we could add episodes table later.
+            const episodes = Array.from({ length: 16 }, (_, i) => ({
+                id: `${slug}-ep-${i + 1}`,
+                number: i + 1,
+                title: `Episode ${i + 1}`,
+                endpoint: `${slug}-ep-${i + 1}`,
+            }));
+
+            return {
+                ...drama,
+                cast: actors,
+                episodes
+            };
+
+        } catch (error) {
+            console.error(`DB Error (getDramaDetail ${slug}):`, error);
+            return null;
+        }
+    }
+
+    // Client-side: use API
     try {
         const res = await fetch(`${API_BASE_URL}/dramas/${slug}`);
         if (!res.ok) {
@@ -106,6 +166,18 @@ export async function getDramaDetail(slug: string): Promise<DramaDetail | null> 
 }
 
 export async function getActors(): Promise<Actor[]> {
+    // Server-side
+    if (typeof window === 'undefined') {
+        try {
+            const { data, error } = await supabase.from('actors').select('*');
+            if (error) throw error;
+            return data as Actor[];
+        } catch (error) {
+            console.error("DB Error (getActors):", error);
+            return [];
+        }
+    }
+
     try {
         const res = await fetch(`${API_BASE_URL}/actors`);
         if (!res.ok) throw new Error('Failed to fetch actors');
@@ -115,10 +187,6 @@ export async function getActors(): Promise<Actor[]> {
         return [];
     }
 }
-
-// These client-side only functions might still use localStorage or need update to DB
-// user-specific data like bookmarks and history should move to DB if user is logged in.
-// For this step, we'll keep them on client or mock them for now until we fully switch Watchlist Context to use API.
 
 interface ReviewResponse {
     reviews: {
@@ -146,8 +214,6 @@ export async function getReviews(dramaId: string): Promise<ReviewResponse> {
         return { reviews: [], averageRating: 0, totalReviews: 0 };
     }
 }
-
-import { StreamSource } from './types';
 
 // Get stream source for an episode (placeholder for now)
 export async function getStreamSource(episodeId: string): Promise<StreamSource | null> {
