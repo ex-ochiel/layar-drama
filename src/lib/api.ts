@@ -31,6 +31,22 @@ export async function getTrendingDramas(): Promise<Drama[]> {
     }
 }
 
+// Alias for getTrendingDramas
+export const getTrending = getTrendingDramas;
+
+export async function getLatestDramas(): Promise<Drama[]> {
+    try {
+        const allDramas = await getDramas();
+        // Return dramas sorted by year (newest first)
+        return allDramas.sort((a, b) => parseInt(b.year || "0") - parseInt(a.year || "0")).slice(0, 12);
+    } catch (e) {
+        return [];
+    }
+}
+
+// Alias for getLatestDramas
+export const getLatest = getLatestDramas;
+
 export async function getDramaById(id: string): Promise<Drama | undefined> {
     // id here is actually the slug/endpoint
     try {
