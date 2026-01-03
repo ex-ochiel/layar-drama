@@ -1,9 +1,32 @@
 import { Drama, Actor, DramaDetail } from './types';
 import { mockDramas } from './mockData'; // Fallback / Types reference
 
-const API_BASE_URL = '/api';
+// Use absolute URL during build, relative during runtime
+const getBaseUrl = () => {
+    if (typeof window !== 'undefined') {
+        // Client-side
+        return '/api';
+    }
+    // Server-side / Build time
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        // During build, return empty and use mock data
+        return '';
+    }
+    return '/api';
+};
+
+const API_BASE_URL = getBaseUrl();
 
 export async function getDramas(filters?: { search?: string; status?: string; country?: string; year?: string }): Promise<Drama[]> {
+    // During build time, return mock data
+    if (!API_BASE_URL) {
+        let result = mockDramas;
+        if (filters?.search) {
+            result = result.filter(d => d.title.toLowerCase().includes(filters.search!.toLowerCase()));
+        }
+        return result;
+    }
+
     const params = new URLSearchParams();
     if (filters?.search) params.append('search', filters.search);
     if (filters?.status && filters.status !== 'All') params.append('status', filters.status);
@@ -16,7 +39,7 @@ export async function getDramas(filters?: { search?: string; status?: string; co
         return await res.json();
     } catch (error) {
         console.error("API Error (getDramas):", error);
-        return [];
+        return mockDramas; // Fallback to mock data
     }
 }
 

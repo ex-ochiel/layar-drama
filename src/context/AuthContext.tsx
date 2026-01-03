@@ -8,6 +8,7 @@ interface AuthContextType {
     user: User | null;
     session: Session | null;
     loading: boolean;
+    isLoading: boolean; // alias for loading
     signInWithGoogle: () => Promise<{ error: any }>;
     signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
     signUpWithEmail: (email: string, password: string, name: string) => Promise<{ error: any }>;
@@ -79,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, session, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
+        <AuthContext.Provider value={{ user, session, loading, isLoading: loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
             {children}
         </AuthContext.Provider>
     );
