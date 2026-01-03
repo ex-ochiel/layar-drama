@@ -135,6 +135,13 @@ export default function Navbar() {
                                             >
                                                 My List
                                             </Link>
+                                            <Link
+                                                href="/profile"
+                                                className="block px-4 py-2 text-sm text-gray-300 hover:bg-zinc-800 hover:text-white"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                            >
+                                                Profile
+                                            </Link>
                                             <button
                                                 onClick={() => {
                                                     signOut();

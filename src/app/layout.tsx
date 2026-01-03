@@ -6,6 +6,8 @@ import Footer from "@/components/Footer";
 import { BookmarkProvider } from "@/context/BookmarkContext";
 import { WatchHistoryProvider } from "@/context/WatchHistoryContext";
 import { RatingProvider } from "@/context/RatingContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,8 +48,6 @@ export const metadata: Metadata = {
   },
 };
 
-import { AuthProvider } from "@/context/AuthContext";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -62,20 +62,30 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black min-h-screen flex flex-col`}
       >
-        <BookmarkProvider>
-          <WatchHistoryProvider>
-            <RatingProvider>
-              <AuthProvider>
-                <AuthProvider>
-                  <Navbar />
-                  <main className="flex-1">{children}</main>
-                  <Footer />
-                </AuthProvider>
-              </AuthProvider>
-            </RatingProvider>
-          </WatchHistoryProvider>
-        </BookmarkProvider>
+        <AuthProvider>
+          <BookmarkProvider>
+            <WatchHistoryProvider>
+              <RatingProvider>
+                <Navbar />
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <Toaster
+                  position="bottom-right"
+                  theme="dark"
+                  toastOptions={{
+                    style: {
+                      background: '#18181b',
+                      border: '1px solid #27272a',
+                      color: '#fff',
+                    },
+                  }}
+                />
+              </RatingProvider>
+            </WatchHistoryProvider>
+          </BookmarkProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+

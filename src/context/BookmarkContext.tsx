@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { Drama } from "@/lib/types";
 import { useAuth } from "./AuthContext";
+import { toast } from "sonner";
 
 interface BookmarkContextType {
     bookmarks: Drama[];
@@ -83,6 +84,7 @@ export function BookmarkProvider({ children }: { children: ReactNode }) {
         if (exists) return;
 
         setBookmarks((prev) => [...prev, drama]);
+        toast.success(`Added "${drama.title}" to your list`);
 
         if (user) {
             try {
@@ -95,11 +97,12 @@ export function BookmarkProvider({ children }: { children: ReactNode }) {
                 if (!res.ok) {
                     // Revert on error
                     setBookmarks((prev) => prev.filter((d) => d.id !== drama.id));
-                    console.error("Failed to add to watchlist");
+                    toast.error("Failed to save to watchlist");
                 }
             } catch (error) {
                 // Revert on error
                 setBookmarks((prev) => prev.filter((d) => d.id !== drama.id));
+                toast.error("Failed to save to watchlist");
                 console.error("Error adding to watchlist:", error);
             }
         }
@@ -114,6 +117,7 @@ export function BookmarkProvider({ children }: { children: ReactNode }) {
         setBookmarks((prev) =>
             prev.filter((d) => d.id !== dramaId && d.slug !== dramaId)
         );
+        toast.success(`Removed "${dramaToRemove.title}" from your list`);
 
         if (user) {
             try {
@@ -124,11 +128,12 @@ export function BookmarkProvider({ children }: { children: ReactNode }) {
                 if (!res.ok) {
                     // Revert on error
                     setBookmarks((prev) => [...prev, dramaToRemove]);
-                    console.error("Failed to remove from watchlist");
+                    toast.error("Failed to remove from watchlist");
                 }
             } catch (error) {
                 // Revert on error
                 setBookmarks((prev) => [...prev, dramaToRemove]);
+                toast.error("Failed to remove from watchlist");
                 console.error("Error removing from watchlist:", error);
             }
         }
