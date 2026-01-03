@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Search, Film, Menu, X, Heart, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,8 +13,12 @@ export default function Navbar() {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const router = useRouter();
+    const pathname = usePathname();
     const { user, signOut } = useAuth();
     const userMenuRef = useRef<HTMLDivElement>(null);
+
+    // Hide Navbar on Admin pages
+    if (pathname?.startsWith("/admin")) return null;
 
     // Close user menu when clicking outside
     useEffect(() => {
