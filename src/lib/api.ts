@@ -17,14 +17,15 @@ const API_BASE_URL = getBaseUrl();
 export async function getDramas(filters?: { search?: string; status?: string; country?: string; year?: string }): Promise<Drama[]> {
     // Server-side / Build time: Use direct DB call
     if (typeof window === 'undefined') {
-        let query = supabase.from('dramas').select('*');
-
-        if (filters?.search) query = query.ilike('title', `%${filters.search}%`);
-        if (filters?.status && filters.status !== 'All') query = query.eq('status', filters.status);
-        if (filters?.country && filters.country !== 'All') query = query.eq('country', filters.country);
-        if (filters?.year && filters.year !== 'All') query = query.eq('year', parseInt(filters.year));
-
         try {
+            // Check if supabase client is valid (it might be empty string during build if env missing)
+            let query = supabase.from('dramas').select('*');
+
+            if (filters?.search) query = query.ilike('title', `%${filters.search}%`);
+            if (filters?.status && filters.status !== 'All') query = query.eq('status', filters.status);
+            if (filters?.country && filters.country !== 'All') query = query.eq('country', filters.country);
+            if (filters?.year && filters.year !== 'All') query = query.eq('year', parseInt(filters.year));
+
             const { data, error } = await query;
             if (error) throw error;
             return data as Drama[];
