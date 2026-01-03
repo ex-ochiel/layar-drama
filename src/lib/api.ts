@@ -119,3 +119,15 @@ export async function getReviews(dramaId: string): Promise<ReviewResponse> {
     }
 }
 
+import { StreamSource } from './types';
+
+// Get stream source for an episode (placeholder for now)
+export async function getStreamSource(episodeId: string): Promise<StreamSource | null> {
+    // This would fetch from an actual streaming API
+    // For now, return a mock/placeholder
+    return {
+        url: `https://www.youtube.com/embed/dQw4w9WgXcQ`,
+        quality: "HD",
+        server: "Default",
+    };
+}
