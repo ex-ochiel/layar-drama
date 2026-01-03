@@ -142,6 +142,15 @@ export default function Navbar() {
                                             >
                                                 Profile
                                             </Link>
+                                            {user.email?.toLowerCase().trim() === "ceosetyawan@gmail.com" && (
+                                                <Link
+                                                    href="/admin"
+                                                    className="block px-4 py-2 text-sm text-yellow-400 hover:bg-zinc-800 hover:text-yellow-300 font-semibold"
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                >
+                                                    Admin Dashboard
+                                                </Link>
+                                            )}
                                             <button
                                                 onClick={() => {
                                                     signOut();
