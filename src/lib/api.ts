@@ -20,6 +20,11 @@ export async function getDramas(filters?: { search?: string; status?: string; co
     }
 }
 
+// Search dramas by query
+export async function searchDrama(query: string): Promise<Drama[]> {
+    return getDramas({ search: query });
+}
+
 export async function getTrendingDramas(): Promise<Drama[]> {
     try {
         // For now, trending is just top rated or random. Let's just fetch all and slice or sort.
