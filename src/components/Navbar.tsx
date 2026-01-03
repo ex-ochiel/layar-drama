@@ -13,7 +13,7 @@ export default function Navbar() {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const router = useRouter();
-    const { user, logout } = useAuth();
+    const { user, signOut } = useAuth();
     const userMenuRef = useRef<HTMLDivElement>(null);
 
     // Close user menu when clicking outside
@@ -112,8 +112,10 @@ export default function Navbar() {
                                         className="flex items-center gap-2 focus:outline-none hover:scale-105 transition-transform"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center overflow-hidden border-2 border-rose-500 ring-2 ring-black/50">
-                                            {user.avatar ? (
-                                                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                            {/* Supabase user object typically doesn't have 'avatar' directly on top level, 
+                                                it's in user_metadata or identities. Adjusting access. */}
+                                            {user.user_metadata?.avatar_url ? (
+                                                <img src={user.user_metadata.avatar_url} alt={user.email || "User"} className="w-full h-full object-cover" />
                                             ) : (
                                                 <User className="w-5 h-5 text-white" />
                                             )}
@@ -123,7 +125,7 @@ export default function Navbar() {
                                     {isUserMenuOpen && (
                                         <div className="absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl py-1 animate-fade-in z-50">
                                             <div className="px-4 py-3 border-b border-zinc-800">
-                                                <p className="text-sm text-white font-medium truncate">{user.name}</p>
+                                                <p className="text-sm text-white font-medium truncate">{user.user_metadata?.full_name || user.email}</p>
                                                 <p className="text-xs text-gray-500 truncate">{user.email}</p>
                                             </div>
                                             <Link
@@ -135,7 +137,7 @@ export default function Navbar() {
                                             </Link>
                                             <button
                                                 onClick={() => {
-                                                    logout();
+                                                    signOut();
                                                     setIsUserMenuOpen(false);
                                                 }}
                                                 className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-zinc-800 hover:text-red-300 flex items-center gap-2"
@@ -210,20 +212,20 @@ export default function Navbar() {
                                     <div className="py-2 border-t border-white/10 mt-2">
                                         <div className="flex items-center gap-3 mb-3 px-2">
                                             <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center overflow-hidden">
-                                                {user.avatar ? (
-                                                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                                {user.user_metadata?.avatar_url ? (
+                                                    <img src={user.user_metadata.avatar_url} alt={user.email || "User"} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <User className="w-5 h-5 text-white" />
                                                 )}
                                             </div>
                                             <div>
-                                                <p className="text-sm text-white font-medium">{user.name}</p>
+                                                <p className="text-sm text-white font-medium">{user.user_metadata?.full_name || user.email}</p>
                                                 <p className="text-xs text-gray-500">{user.email}</p>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => {
-                                                logout();
+                                                signOut();
                                                 setIsMobileMenuOpen(false);
                                             }}
                                             className="w-full text-left flex items-center gap-2 text-red-400 hover:text-red-300 py-2 px-2"

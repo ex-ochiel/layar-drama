@@ -9,7 +9,8 @@ export interface Drama {
     genres?: string[];
     status?: "ongoing" | "completed";
     description?: string;
-    endpoint?: string;
+    endpoint?: string; // legacy field, same as slug
+    slug?: string; // URL-friendly identifier
     country?: string;
 }
 

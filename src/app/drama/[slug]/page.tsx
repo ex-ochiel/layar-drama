@@ -6,6 +6,7 @@ import { Star, Calendar, Clock, ChevronRight, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DetailActions from "@/components/DetailActions";
 import DetailRating from "@/components/DetailRating";
+import ReviewsSection from "@/components/ReviewsSection";
 
 // Mock data for development
 const mockDramaDetail = {
@@ -234,6 +235,9 @@ export default async function DramaDetailPage({ params }: DramaDetailPageProps) 
                         </div>
                     </section>
                 )}
+
+                {/* Reviews Section */}
+                <ReviewsSection dramaId={drama.id} />
             </div>
         </div>
     );

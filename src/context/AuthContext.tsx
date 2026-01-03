@@ -1,92 +1,85 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useRouter } from "next/navigation";
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
-    avatar?: string;
-}
+import { createContext, useContext, useEffect, useState } from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 
 interface AuthContextType {
     user: User | null;
-    isLoading: boolean;
-    login: (email: string) => Promise<void>;
-    register: (name: string, email: string) => Promise<void>;
-    logout: () => void;
+    session: Session | null;
+    loading: boolean;
+    signInWithGoogle: () => Promise<{ error: any }>;
+    signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
+    signUpWithEmail: (email: string, password: string, name: string) => Promise<{ error: any }>;
+    signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user data storage key
-const STORAGE_KEY = "layar-drama-auth";
-
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const router = useRouter();
+    const [session, setSession] = useState<Session | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    // Load user from localStorage on mount
     useEffect(() => {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                setUser(JSON.parse(stored));
-            }
-        } catch (error) {
-            console.error("Error loading auth state:", error);
-        } finally {
-            setIsLoading(false);
-        }
+        // Check active session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            setUser(session?.user ?? null);
+            setLoading(false);
+        });
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+            setUser(session?.user ?? null);
+            setLoading(false);
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
 
-    const login = async (email: string) => {
-        setIsLoading(true);
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const mockUser: User = {
-            id: "user-1",
-            name: email.split("@")[0] || "User",
-            email: email,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
-        };
-
-        setUser(mockUser);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
-        setIsLoading(false);
-        router.push("/");
+    const signInWithGoogle = async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
+        return { error };
     };
 
-    const register = async (name: string, email: string) => {
-        setIsLoading(true);
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+    const signInWithEmail = async (email: string, password: string) => {
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+        return { error };
+    }
 
-        const mockUser: User = {
-            id: "user-1",
-            name: name,
-            email: email,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-        };
+    const signUpWithEmail = async (email: string, password: string, name: string) => {
+        const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: name,
+                    // We can add avatar_url placeholder here if we want
+                },
+            }
+        });
+        return { error };
+    }
 
-        setUser(mockUser);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
-        setIsLoading(false);
-        router.push("/");
-    };
-
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem(STORAGE_KEY);
-        router.push("/login"); // Redirect to login after logout
-        router.refresh(); // Refresh to update UI states
+    const signOut = async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            console.error("Error logging out:", error.message);
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, session, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
             {children}
         </AuthContext.Provider>
     );

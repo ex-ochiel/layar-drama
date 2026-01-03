@@ -1,88 +1,105 @@
-import { Drama, DramaDetail, StreamSource, ApiResponse } from "./types";
+import { Drama, Actor, DramaDetail } from './types';
+import { mockDramas } from './mockData'; // Fallback / Types reference
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.sansekai.my.id";
+const API_BASE_URL = '/api';
 
-/**
- * Fetches trending/home dramas
- */
-export async function getTrending(): Promise<Drama[]> {
+export async function getDramas(filters?: { search?: string; status?: string; country?: string; year?: string }): Promise<Drama[]> {
+    const params = new URLSearchParams();
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.status && filters.status !== 'All') params.append('status', filters.status);
+    if (filters?.country && filters.country !== 'All') params.append('country', filters.country);
+    if (filters?.year && filters.year !== 'All') params.append('year', filters.year);
+
     try {
-        const res = await fetch(`${BASE_URL}/dramabox/home`, {
-            next: { revalidate: 3600 }, // Cache for 1 hour
-        });
-        if (!res.ok) throw new Error("Failed to fetch trending dramas");
-        const json: ApiResponse<{ trending?: Drama[]; latest?: Drama[] }> = await res.json();
-        return json.data?.trending || json.data?.latest || [];
+        const res = await fetch(`${API_BASE_URL}/dramas?${params.toString()}`);
+        if (!res.ok) throw new Error('Failed to fetch dramas');
+        return await res.json();
     } catch (error) {
-        console.error("Error fetching trending:", error);
+        console.error("API Error (getDramas):", error);
         return [];
     }
 }
 
-/**
- * Fetches latest released dramas
- */
-export async function getLatest(): Promise<Drama[]> {
+export async function getTrendingDramas(): Promise<Drama[]> {
     try {
-        const res = await fetch(`${BASE_URL}/dramabox/latest`, {
-            next: { revalidate: 1800 }, // Cache for 30 minutes
-        });
-        if (!res.ok) throw new Error("Failed to fetch latest dramas");
-        const json: ApiResponse<Drama[]> = await res.json();
-        return json.data || [];
-    } catch (error) {
-        console.error("Error fetching latest:", error);
+        // For now, trending is just top rated or random. Let's just fetch all and slice or sort.
+        // Ideally backend endpoint /api/dramas/trending
+        const allDramas = await getDramas();
+        return allDramas.sort((a, b) => parseFloat(b.rating || "0") - parseFloat(a.rating || "0")).slice(0, 5);
+    } catch (e) {
         return [];
     }
 }
 
-/**
- * Search dramas by query
- */
-export async function searchDrama(query: string): Promise<Drama[]> {
+export async function getDramaById(id: string): Promise<Drama | undefined> {
+    // id here is actually the slug/endpoint
     try {
-        const res = await fetch(`${BASE_URL}/dramabox/search?q=${encodeURIComponent(query)}`, {
-            cache: "no-store",
-        });
-        if (!res.ok) throw new Error("Failed to search dramas");
-        const json: ApiResponse<Drama[]> = await res.json();
-        return json.data || [];
+        const res = await fetch(`${API_BASE_URL}/dramas/${id}`);
+        if (!res.ok) {
+            if (res.status === 404) return undefined;
+            throw new Error('Failed to fetch drama details');
+        }
+        return await res.json();
     } catch (error) {
-        console.error("Error searching dramas:", error);
-        return [];
+        console.error(`API Error (getDramaById ${id}):`, error);
+        return undefined;
     }
 }
 
-/**
- * Fetches drama details by ID/slug
- */
-export async function getDramaDetail(id: string): Promise<DramaDetail | null> {
+// Alias for getDramaById - returns full drama detail including cast
+export async function getDramaDetail(slug: string): Promise<DramaDetail | null> {
     try {
-        const res = await fetch(`${BASE_URL}/dramabox/detail?id=${encodeURIComponent(id)}`, {
-            next: { revalidate: 3600 },
-        });
-        if (!res.ok) throw new Error("Failed to fetch drama detail");
-        const json: ApiResponse<DramaDetail> = await res.json();
-        return json.data || null;
+        const res = await fetch(`${API_BASE_URL}/dramas/${slug}`);
+        if (!res.ok) {
+            if (res.status === 404) return null;
+            throw new Error('Failed to fetch drama details');
+        }
+        return await res.json();
     } catch (error) {
-        console.error("Error fetching drama detail:", error);
+        console.error(`API Error (getDramaDetail ${slug}):`, error);
         return null;
     }
 }
 
-/**
- * Gets stream source for an episode
- */
-export async function getStreamSource(episodeId: string): Promise<StreamSource | null> {
+export async function getActors(): Promise<Actor[]> {
     try {
-        const res = await fetch(`${BASE_URL}/dramabox/stream?id=${encodeURIComponent(episodeId)}`, {
-            cache: "no-store",
-        });
-        if (!res.ok) throw new Error("Failed to fetch stream source");
-        const json: ApiResponse<StreamSource> = await res.json();
-        return json.data || null;
+        const res = await fetch(`${API_BASE_URL}/actors`);
+        if (!res.ok) throw new Error('Failed to fetch actors');
+        return await res.json();
     } catch (error) {
-        console.error("Error fetching stream source:", error);
-        return null;
+        console.error("API Error (getActors):", error);
+        return [];
     }
 }
+
+// These client-side only functions might still use localStorage or need update to DB
+// user-specific data like bookmarks and history should move to DB if user is logged in.
+// For this step, we'll keep them on client or mock them for now until we fully switch Watchlist Context to use API.
+
+interface ReviewResponse {
+    reviews: {
+        id: string;
+        rating: number;
+        comment: string;
+        created_at: string;
+        user_id: string;
+        user: {
+            name: string;
+            avatar: string | null;
+        };
+    }[];
+    averageRating: number;
+    totalReviews: number;
+}
+
+export async function getReviews(dramaId: string): Promise<ReviewResponse> {
+    try {
+        const res = await fetch(`${API_BASE_URL}/reviews?drama_id=${dramaId}`);
+        if (!res.ok) throw new Error('Failed to fetch reviews');
+        return await res.json();
+    } catch (error) {
+        console.error("API Error (getReviews):", error);
+        return { reviews: [], averageRating: 0, totalReviews: 0 };
+    }
+}
+

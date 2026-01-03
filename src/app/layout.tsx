@@ -66,9 +66,11 @@ export default function RootLayout({
           <WatchHistoryProvider>
             <RatingProvider>
               <AuthProvider>
-                <Navbar />
-                <main className="flex-1">{children}</main>
-                <Footer />
+                <AuthProvider>
+                  <Navbar />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                </AuthProvider>
               </AuthProvider>
             </RatingProvider>
           </WatchHistoryProvider>
